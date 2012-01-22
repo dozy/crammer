@@ -61,7 +61,8 @@ public class ViewSam2 extends CommandLineProgram {
 	}
 
 	@Usage
-	public final String USAGE = getStandardUsagePreamble() + "Prints a SAM or BAM file to the screen.";
+	public final String USAGE = getStandardUsagePreamble()
+			+ "Prints a SAM or BAM file to the screen.";
 	@Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The SAM or BAM file to view.")
 	public File INPUT;
 
@@ -88,10 +89,18 @@ public class ViewSam2 extends CommandLineProgram {
 				System.out.println(q);
 
 		IoUtil.assertFileIsReadable(INPUT);
-		final SAMFileReader in = new SAMFileReader(INPUT);
+
+		File indexFile = new File(INPUT + ".bai");
+		if (!indexFile.exists()) {
+			indexFile = new File(INPUT + ".bai");
+			if (!indexFile.exists())
+				indexFile = null;
+		}
+		final SAMFileReader in = new SAMFileReader(INPUT, indexFile);
 		final SAMFileHeader header = in.getFileHeader();
 
-		final SAMFileWriter out = new SAMFileWriterFactory().makeSAMWriter(header, true, System.out);
+		final SAMFileWriter out = new SAMFileWriterFactory().makeSAMWriter(
+				header, true, System.out);
 
 		for (String query : queries) {
 			SAMRecordIterator iterator = null;
@@ -102,9 +111,11 @@ public class ViewSam2 extends CommandLineProgram {
 				try {
 					asq = createAlignmentSliceQuery(query);
 				} catch (Exception e) {
-					throw new RuntimeException("Malformed alignment query: " + query);
+					throw new RuntimeException("Malformed alignment query: "
+							+ query);
 				}
-				iterator = in.query(asq.sequence, asq.start, asq.end, contained);
+				iterator = in
+						.query(asq.sequence, asq.start, asq.end, contained);
 			}
 			while (iterator.hasNext()) {
 				SAMRecord rec = iterator.next();
@@ -112,14 +123,18 @@ public class ViewSam2 extends CommandLineProgram {
 					return 0;
 				}
 
-				if (this.ALIGNMENT_STATUS == AlignmentStatus.Aligned && rec.getReadUnmappedFlag())
+				if (this.ALIGNMENT_STATUS == AlignmentStatus.Aligned
+						&& rec.getReadUnmappedFlag())
 					continue;
-				if (this.ALIGNMENT_STATUS == AlignmentStatus.Unaligned && !rec.getReadUnmappedFlag())
+				if (this.ALIGNMENT_STATUS == AlignmentStatus.Unaligned
+						&& !rec.getReadUnmappedFlag())
 					continue;
 
-				if (this.PF_STATUS == PfStatus.PF && rec.getReadFailsVendorQualityCheckFlag())
+				if (this.PF_STATUS == PfStatus.PF
+						&& rec.getReadFailsVendorQualityCheckFlag())
 					continue;
-				if (this.PF_STATUS == PfStatus.NonPF && !rec.getReadFailsVendorQualityCheckFlag())
+				if (this.PF_STATUS == PfStatus.NonPF
+						&& !rec.getReadFailsVendorQualityCheckFlag())
 					continue;
 
 				out.addAlignment(rec);

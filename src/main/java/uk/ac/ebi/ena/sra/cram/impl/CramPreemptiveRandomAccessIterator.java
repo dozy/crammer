@@ -165,7 +165,9 @@ public class CramPreemptiveRandomAccessIterator implements CloseableIterator<Cra
 
 				referenceSequence = referenceSequenceFile.getSubsequenceAt(block.getSequenceName(), 1,
 						referenceSequence.length());
-				referenceBaseProvider = new ByteArraySequenceBaseProvider(referenceSequence.getBases());
+				byte[] refBases=referenceSequence.getBases() ;
+				Utils.capitaliseAndCheckBases(refBases, false) ;
+				referenceBaseProvider = new ByteArraySequenceBaseProvider(refBases);
 
 			}
 
